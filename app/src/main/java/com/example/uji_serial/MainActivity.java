@@ -28,12 +28,16 @@ import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
+import com.github.mikephil.charting.utils.ColorTemplate;
 
 import java.lang.ref.WeakReference;
 import java.util.Set;
 
-public class MainActivity extends AppCompatActivity {
+
+public class MainActivity extends AppCompatActivity implements OnChartValueSelectedListener {
     LineChart mChart;
     boolean stopThread;
     private UsbService usbService;
@@ -41,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText editText;
     private CheckBox box9600, box115200;
     private MyHandler mHandler;
+    float tekanan;
     /*
      * Notifications from UsbService will be received here.
      */
@@ -66,7 +71,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
-
     private final ServiceConnection usbConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName arg0, IBinder arg1) {
@@ -85,6 +89,60 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        setTitle("RealtimeLineChartActivity");
+
+        mChart = findViewById(R.id.line_chart);
+        mChart.setOnChartValueSelectedListener(this);
+
+        // enable description text
+        mChart.getDescription().setEnabled(false);
+
+        // enable touch gestures
+        mChart.setTouchEnabled(true);
+
+        // enable scaling and dragging
+        mChart.setDragEnabled(true);
+        mChart.setScaleEnabled(true);
+        mChart.setDrawGridBackground(false);
+
+        // if disabled, scaling can be done on x- and y-axis separately
+        mChart.setPinchZoom(true);
+
+        // set an alternative background color
+        mChart.setBackgroundColor(Color.LTGRAY);
+
+        LineData data = new LineData();
+        data.setValueTextColor(Color.WHITE);
+
+        // add empty data
+        mChart.setData(data);
+
+        feedMultiple();
+        // get the legend (only possible after setting data)
+        Legend l = mChart.getLegend();
+
+        // modify the legend ...
+        l.setForm(Legend.LegendForm.LINE);
+//        l.setTypeface(tfLight);
+        l.setTextColor(Color.WHITE);
+
+        XAxis xl = mChart.getXAxis();
+//        xl.setTypeface(tfLight);
+        xl.setTextColor(Color.WHITE);
+        xl.setDrawGridLines(false);
+        xl.setAvoidFirstLastClipping(true);
+        xl.setEnabled(true);
+
+        YAxis leftAxis = mChart.getAxisLeft();
+//        leftAxis.setTypeface(tfLight);
+        leftAxis.setTextColor(Color.WHITE);
+        leftAxis.setAxisMaximum(100f);
+        leftAxis.setAxisMinimum(0f);
+        leftAxis.setDrawGridLines(true);
+
+        YAxis rightAxis = mChart.getAxisRight();
+        rightAxis.setEnabled(false);
+
         mHandler = new MyHandler(this);
 
         display = (TextView) findViewById(R.id.textView1);
@@ -99,17 +157,6 @@ public class MainActivity extends AppCompatActivity {
                         usbService.write(data1.getBytes());
                     }
                 }
-            }
-        });
-
-        Button baudrateButton = (Button) findViewById(R.id.buttonBaudrate);
-        baudrateButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(box115200.isChecked())
-                    usbService.changeBaudRate(115200);
-                else
-                    usbService.changeBaudRate(9600);
             }
         });
 
@@ -134,89 +181,103 @@ public class MainActivity extends AppCompatActivity {
                     box115200.setChecked(true);
             }
         });
+        Button baudrateButton = (Button) findViewById(R.id.buttonBaudrate);
+        baudrateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(box115200.isChecked())
+                    usbService.changeBaudRate(115200);
+                else
+                    usbService.changeBaudRate(9600);
+            }
+        });
+    }
 
-        mChart = findViewById(R.id.line_chart);
-        mChart.getDescription().setEnabled(false);
-        mChart.getDescription().setText("Realtime Pressure Value");
-        mChart.getDescription().setTextColor(Color.WHITE);
-        mChart.setNoDataText("Tidak ada data");
+    private void addEntry() {
 
-        mChart.setTouchEnabled(false);
-        mChart.setDragEnabled(false);
-        mChart.setScaleEnabled(false);
-        mChart.setDrawGridBackground(true);
-        mChart.setGridBackgroundColor(Color.BLACK);
-        mChart.setPinchZoom(false);
-        mChart.setBackgroundColor(Color.BLACK);
-        LineData data = new LineData();
-        data.setValueTextColor(Color.BLUE);
-        mChart.setData(data);
-//        mChart.getLegend().getCalculatedLineSizes();
+        LineData data = mChart.getData();
 
-        Legend l = mChart.getLegend();
-        l.setForm(Legend.LegendForm.LINE);
-        l.setFormLineWidth(1f);
-        l.setVerticalAlignment(Legend.LegendVerticalAlignment.TOP);
-        l.setHorizontalAlignment(Legend.LegendHorizontalAlignment.CENTER);
-        l.setOrientation(Legend.LegendOrientation.HORIZONTAL);
-        l.setDrawInside(false);
-        l.setTextColor(Color.WHITE);
-        l.setEnabled(true);
-        l.setTextSize(12f);
+        if (data != null) {
 
-        XAxis xl = mChart.getXAxis();
-        xl.setPosition(XAxis.XAxisPosition.BOTTOM);
-        xl.setTextSize(10f);
-        xl.setTextColor(Color.RED);
-        xl.setDrawAxisLine(true);
-        xl.setDrawGridLines(true);
-        xl.setDrawLabels(false);
-        xl.setEnabled(true);
+            ILineDataSet set = data.getDataSetByIndex(0);
+            // set.addEntry(...); // can be called as well
 
-        YAxis leftAxis = mChart.getAxisLeft();
-        leftAxis.setTextColor(Color.WHITE);
-        leftAxis.setDrawGridLines(true);
-        leftAxis.setGridLineWidth(2f);
-        leftAxis.setAxisMinimum(-20f);
-        leftAxis.setAxisMaximum(100f);
-        leftAxis.setLabelCount(7);
-//        leftAxis.setGranularity(7f);
-        leftAxis.setEnabled(true);
+            if (set == null) {
+                set = createSet();
+                data.addDataSet(set);
+            }
 
-        YAxis rightAxis = mChart.getAxisRight();
-        rightAxis.setLabelCount(7, true);
-        rightAxis.setEnabled(true);
+            data.addEntry(new Entry(set.getEntryCount(), (float) (Math.random() * 40) + 30f), 0);
+            data.notifyDataChanged();
 
-        mChart.getAxisLeft().setDrawGridLines(false);
-        mChart.getXAxis().setDrawGridLines(false);
-        mChart.setDrawBorders(false);
+            // let the chart know it's data has changed
+            mChart.notifyDataSetChanged();
 
-        final Thread thread = new Thread(new Runnable() {
+            // limit the number of visible entries
+            mChart.setVisibleXRangeMaximum(120);
+            // chart.setVisibleYRange(30, AxisDependency.LEFT);
+
+            // move to the latest entry
+            mChart.moveViewToX(data.getEntryCount());
+
+            // this automatically refreshes the chart (calls invalidate())
+            // chart.moveViewTo(data.getXValCount()-7, 55f,
+            // AxisDependency.LEFT);
+        }
+    }
+
+    private LineDataSet createSet() {
+
+        LineDataSet set = new LineDataSet(null, "Dynamic Data");
+        set.setAxisDependency(YAxis.AxisDependency.LEFT);
+        set.setColor(ColorTemplate.getHoloBlue());
+        set.setCircleColor(Color.WHITE);
+        set.setLineWidth(2f);
+        set.setCircleRadius(4f);
+        set.setFillAlpha(65);
+        set.setFillColor(ColorTemplate.getHoloBlue());
+        set.setHighLightColor(Color.rgb(244, 117, 117));
+        set.setValueTextColor(Color.WHITE);
+        set.setValueTextSize(9f);
+        set.setDrawValues(false);
+        return set;
+    }
+
+    private Thread thread;
+
+    private void feedMultiple() {
+
+        if (thread != null)
+            thread.interrupt();
+
+        final Runnable runnable = new Runnable() {
+
             @Override
             public void run() {
-                while (!Thread.currentThread().isInterrupted() && !stopThread)
-                    while(true){
-                        try {
+                addEntry();
+            }
+        };
 
-                            int dataSerial = 0;
-                            final int tekanan = dataSerial;
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    addEntry((float) tekanan);
-                                }
-                            });
+        thread = new Thread(new Runnable() {
 
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+            @Override
+            public void run() {
+                for (int i = 0; i < 1000; i++) {
+
+                    // Don't generate garbage runnables inside the loop.
+                    runOnUiThread(runnable);
+
+                    try {
+                        Thread.sleep(25);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
+                }
             }
         });
 
-}
-
-
+        thread.start();
+    }
 
     @Override
     public void onResume() {
@@ -237,10 +298,6 @@ public class MainActivity extends AppCompatActivity {
         super.onPostResume();
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
 
     private void startService(Class<?> service, ServiceConnection serviceConnection, Bundle extras) {
         if (!UsbService.SERVICE_CONNECTED) {
@@ -268,11 +325,22 @@ public class MainActivity extends AppCompatActivity {
         registerReceiver(mUsbReceiver, filter);
     }
 
+    @Override
+    public void onValueSelected(Entry e, Highlight h) {
+
+    }
+
+    @Override
+    public void onNothingSelected() {
+
+    }
+
     /*
      * This handler will be passed to UsbService. Data received from serial port is displayed through this handler
      */
-    private static class MyHandler extends Handler {
-        private final WeakReference<MainActivity> mActivity;
+    public static class MyHandler extends Handler {
+        public final WeakReference<MainActivity> mActivity;
+        public Object tekanan;
 
         public MyHandler(MainActivity activity) {
             mActivity = new WeakReference<>(activity);
@@ -284,6 +352,7 @@ public class MainActivity extends AppCompatActivity {
                 case UsbService.MESSAGE_FROM_SERIAL_PORT:
                     String data1 = (String) msg.obj;
                     mActivity.get().display.append(data1);
+                    tekanan = Float.parseFloat(data1);
                     break;
                 case UsbService.CTS_CHANGE:
                     Toast.makeText(mActivity.get(), "CTS_CHANGE",Toast.LENGTH_LONG).show();
@@ -299,48 +368,4 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-
-    private void addEntry(float tekanan) {
-        LineData data = mChart.getData();
-        if (data != null) {
-            ILineDataSet set = data.getDataSetByIndex(0);
-            // set.addEntry(...); // can be called as well
-            if (set == null) {
-                set = createSet();
-                data.addDataSet(set);
-            }
-            // choose a random dataSet
-            int randomDataSetIndex = (int) (Math.random() * data.getDataSetCount());
-            ILineDataSet randomSet = data.getDataSetByIndex(randomDataSetIndex);
-            float value = (float) (Math.random() * 2) + 50f * (randomDataSetIndex + 1);
-
-            data.addEntry(new Entry(randomSet.getEntryCount(), value), randomDataSetIndex);
-            // let the chart know it's data has changed
-            mChart.notifyDataSetChanged();
-            // limit the number of visible entries
-            mChart.setVisibleXRangeMaximum(6);
-            // chart.setVisibleYRange(30, AxisDependency.LEFT);
-            // move to the latest entry
-            mChart.moveViewToX(data.getEntryCount());
-            // this automatically refreshes the chart (calls invalidate())
-            // chart.moveViewTo(data.getXValCount()-7, 55f,
-            // AxisDependency.LEFT);
-        }
-//        mChart.invalidate();
-    }
-    private LineDataSet createSet() {
-        LineDataSet set = new LineDataSet(null, "Pressure (mmHg)");
-        set.setAxisDependency(YAxis.AxisDependency.LEFT);
-        set.setLineWidth(1f);
-        set.setColor(Color.MAGENTA);
-//        set.setMode(LineDataSet.Mode.CUBIC_BEZIER);
-        set.setCubicIntensity(0.2f);
-        set.setDrawCircles(false);
-        set.setCircleRadius(0f);
-        set.setDrawCircleHole(false);
-        set.setDrawValues(false);
-
-        return set;
-    }
-
 }
