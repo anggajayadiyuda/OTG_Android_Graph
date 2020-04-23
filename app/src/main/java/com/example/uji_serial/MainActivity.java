@@ -207,7 +207,11 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
                 data.addDataSet(set);
             }
 
-            data.addEntry(new Entry(set.getEntryCount(), (float) mHandler.getTekanan()), 0);
+            if(!display.getText().toString().equals("Serial Print")) {
+                data.addEntry(new Entry(set.getEntryCount(), Float.parseFloat(display.getText().toString())), 0);
+            }else {
+                data.addEntry(new Entry(set.getEntryCount(), mHandler.tekanan), 0);
+            }
             data.notifyDataChanged();
 
             // let the chart know it's data has changed
@@ -346,22 +350,14 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
             mActivity = new WeakReference<>(activity);
         }
 
-        public float getTekanan() {
-            return tekanan;
-        }
-
-        public void setTekanan(float tekanan) {
-            this.tekanan = tekanan;
-        }
 
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case UsbService.MESSAGE_FROM_SERIAL_PORT:
                     String data1 = (String) msg.obj;
-                    mActivity.get().display.append(data1);
+                    mActivity.get().display.setText(data1);
                     tekanan = Float.parseFloat(data1);
-                    setTekanan(Float.parseFloat(data1));
                     break;
                 case UsbService.CTS_CHANGE:
                     Toast.makeText(mActivity.get(), "CTS_CHANGE",Toast.LENGTH_LONG).show();

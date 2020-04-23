@@ -10,7 +10,7 @@
 
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/line_chart"
-        android:layout_width="610dp"
+        android:layout_width="200dp"
         android:layout_height="215dp"
         app:layout_constraintBottom_toTopOf="@+id/editText1"
         app:layout_constraintEnd_toStartOf="@+id/checkBox"
