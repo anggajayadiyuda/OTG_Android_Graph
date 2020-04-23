@@ -208,7 +208,7 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
             }
 
             if(!display.getText().toString().equals("Serial Print")) {
-                data.addEntry(new Entry(set.getEntryCount(), Float.parseFloat(display.getText().toString())), 0);
+                data.addEntry(new Entry(set.getEntryCount(), mHandler.getTekanan()), 0);
             }else {
                 data.addEntry(new Entry(set.getEntryCount(), mHandler.tekanan), 0);
             }
@@ -344,12 +344,21 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
      */
     public static class MyHandler extends Handler {
         public final WeakReference<MainActivity> mActivity;
+
         public float tekanan = 50f;
 
         public MyHandler(MainActivity activity) {
             mActivity = new WeakReference<>(activity);
         }
 
+
+        public float getTekanan() {
+            return tekanan;
+        }
+
+        public void setTekanan(float tekanan) {
+            this.tekanan = tekanan;
+        }
 
         @Override
         public void handleMessage(Message msg) {
@@ -367,7 +376,7 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
                 case UsbService.SYNC_READ:
                     String buffer = (String) msg.obj;
                     mActivity.get().display.setText(buffer);
-                    tekanan = Float.parseFloat(buffer);
+                    setTekanan(Float.parseFloat(buffer));
                     break;
             }
         }
