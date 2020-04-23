@@ -340,17 +340,17 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
      */
     public static class MyHandler extends Handler {
         public final WeakReference<MainActivity> mActivity;
-        public Object tekanan;
+        public float tekanan = 50f;
 
         public MyHandler(MainActivity activity) {
             mActivity = new WeakReference<>(activity);
         }
 
-        public Object getTekanan() {
+        public float getTekanan() {
             return tekanan;
         }
 
-        public void setTekanan(Object tekanan) {
+        public void setTekanan(float tekanan) {
             this.tekanan = tekanan;
         }
 
