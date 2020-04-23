@@ -207,7 +207,7 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
                 data.addDataSet(set);
             }
 
-            data.addEntry(new Entry(set.getEntryCount(), (float) (Math.random() * 40) + 30f), 0);
+            data.addEntry(new Entry(set.getEntryCount(), (float) mHandler.getTekanan()), 0);
             data.notifyDataChanged();
 
             // let the chart know it's data has changed
@@ -346,6 +346,14 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
             mActivity = new WeakReference<>(activity);
         }
 
+        public Object getTekanan() {
+            return tekanan;
+        }
+
+        public void setTekanan(Object tekanan) {
+            this.tekanan = tekanan;
+        }
+
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
@@ -353,6 +361,7 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
                     String data1 = (String) msg.obj;
                     mActivity.get().display.append(data1);
                     tekanan = Float.parseFloat(data1);
+                    setTekanan(Float.parseFloat(data1));
                     break;
                 case UsbService.CTS_CHANGE:
                     Toast.makeText(mActivity.get(), "CTS_CHANGE",Toast.LENGTH_LONG).show();
