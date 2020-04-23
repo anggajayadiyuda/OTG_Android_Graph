@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
         // add empty data
         mChart.setData(data);
 
-//        feedMultiple();
+        feedMultiple();
         // get the legend (only possible after setting data)
         Legend l = mChart.getLegend();
 
@@ -193,7 +193,7 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
         });
     }
 
-    private void addEntry(Float tekanan) {
+    private void addEntry() {
 
         LineData data = mChart.getData();
 
@@ -207,7 +207,7 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
                 data.addDataSet(set);
             }
 
-            data.addEntry(new Entry(set.getEntryCount(), tekanan), 0);
+            data.addEntry(new Entry(set.getEntryCount(), (float) mHandler.getTekanan()), 0);
             data.notifyDataChanged();
 
             // let the chart know it's data has changed
@@ -254,7 +254,7 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
 
             @Override
             public void run() {
-//                addEntry();
+                addEntry();
             }
         };
 
@@ -340,10 +340,18 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
      */
     public static class MyHandler extends Handler {
         public final WeakReference<MainActivity> mActivity;
-        public float tekanan;
+        public Object tekanan;
 
         public MyHandler(MainActivity activity) {
             mActivity = new WeakReference<>(activity);
+        }
+
+        public Object getTekanan() {
+            return tekanan;
+        }
+
+        public void setTekanan(Object tekanan) {
+            this.tekanan = tekanan;
         }
 
         @Override
@@ -353,7 +361,7 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
                     String data1 = (String) msg.obj;
                     mActivity.get().display.append(data1);
                     tekanan = Float.parseFloat(data1);
-                    mActivity.get().addEntry(tekanan);
+                    setTekanan(Float.parseFloat(data1));
                     break;
                 case UsbService.CTS_CHANGE:
                     Toast.makeText(mActivity.get(), "CTS_CHANGE",Toast.LENGTH_LONG).show();
