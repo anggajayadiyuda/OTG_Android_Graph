@@ -357,7 +357,6 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
                 case UsbService.MESSAGE_FROM_SERIAL_PORT:
                     String data1 = (String) msg.obj;
                     mActivity.get().display.setText(data1);
-                    tekanan = Float.parseFloat(data1);
                     break;
                 case UsbService.CTS_CHANGE:
                     Toast.makeText(mActivity.get(), "CTS_CHANGE",Toast.LENGTH_LONG).show();
@@ -367,7 +366,8 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
                     break;
                 case UsbService.SYNC_READ:
                     String buffer = (String) msg.obj;
-                    mActivity.get().display.append(buffer);
+                    mActivity.get().display.setText(buffer);
+                    tekanan = Float.parseFloat(buffer);
                     break;
             }
         }
