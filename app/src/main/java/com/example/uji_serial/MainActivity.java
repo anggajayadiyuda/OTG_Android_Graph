@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.renderscript.ScriptGroup;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -33,6 +34,11 @@ import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.ColorTemplate;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.util.Set;
 
@@ -42,10 +48,12 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
     boolean stopThread;
     private UsbService usbService;
     private TextView display;
+    private TextView dataDisplay;
     private EditText editText;
     private CheckBox box9600, box115200;
     private MyHandler mHandler;
-    float tekanan;
+    private String inputStream;
+//    int tekanan;
     /*
      * Notifications from UsbService will be received here.
      */
@@ -113,16 +121,16 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
 
         LineData data = new LineData();
         data.setValueTextColor(Color.WHITE);
-
         // add empty data
         mChart.setData(data);
 
-        feedMultiple();
+//        feedMultiple();
         // get the legend (only possible after setting data)
         Legend l = mChart.getLegend();
 
         // modify the legend ...
         l.setForm(Legend.LegendForm.LINE);
+
 //        l.setTypeface(tfLight);
         l.setTextColor(Color.WHITE);
 
@@ -139,13 +147,13 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
         leftAxis.setAxisMaximum(100f);
         leftAxis.setAxisMinimum(0f);
         leftAxis.setDrawGridLines(true);
-
         YAxis rightAxis = mChart.getAxisRight();
         rightAxis.setEnabled(false);
 
         mHandler = new MyHandler(this);
 
         display = (TextView) findViewById(R.id.textView1);
+        dataDisplay = (TextView) findViewById(R.id.Data1);
         editText = (EditText) findViewById(R.id.editText1);
         Button sendButton = (Button) findViewById(R.id.buttonSend);
         sendButton.setOnClickListener(new View.OnClickListener() {
@@ -164,7 +172,7 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
         box115200.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(box115200.isChecked())
+                if (box115200.isChecked())
                     box9600.setChecked(false);
                 else
                     box9600.setChecked(true);
@@ -175,7 +183,7 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
         box9600.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(box9600.isChecked())
+                if (box9600.isChecked())
                     box115200.setChecked(false);
                 else
                     box115200.setChecked(true);
@@ -185,15 +193,19 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
         baudrateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(box115200.isChecked())
+                if (box115200.isChecked())
                     usbService.changeBaudRate(115200);
                 else
                     usbService.changeBaudRate(9600);
             }
         });
+
+//        feedMultiple();
+
+
     }
 
-    private void addEntry() {
+    private void addEntry(int value) {
 
         LineData data = mChart.getData();
 
@@ -207,11 +219,10 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
                 data.addDataSet(set);
             }
 
-            if(!display.getText().toString().equals("Serial Print")) {
-                data.addEntry(new Entry(set.getEntryCount(), mHandler.getTekanan()), 0);
-            }else {
-                data.addEntry(new Entry(set.getEntryCount(), mHandler.tekanan), 0);
-            }
+              data.addEntry(new Entry(set.getEntryCount(), (int) (value)), 0);
+//            data.addEntry(new Entry(set.getEntryCount(), (float) (Math.random() * 40) + 30f), 0);
+
+//            System.out.println(set.getEntryCount());
             data.notifyDataChanged();
 
             // let the chart know it's data has changed
@@ -223,11 +234,12 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
 
             // move to the latest entry
             mChart.moveViewToX(data.getEntryCount());
-
+            mChart.invalidate();
             // this automatically refreshes the chart (calls invalidate())
             // chart.moveViewTo(data.getXValCount()-7, 55f,
             // AxisDependency.LEFT);
         }
+
     }
 
     private LineDataSet createSet() {
@@ -244,44 +256,46 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
         set.setValueTextColor(Color.WHITE);
         set.setValueTextSize(9f);
         set.setDrawValues(false);
+        set.setDrawCircles(false);
         return set;
     }
 
-    private Thread thread;
-
-    private void feedMultiple() {
-
-        if (thread != null)
-            thread.interrupt();
-
-        final Runnable runnable = new Runnable() {
-
-            @Override
-            public void run() {
-                addEntry();
-            }
-        };
-
-        thread = new Thread(new Runnable() {
-
-            @Override
-            public void run() {
-                for (int i = 0; i < 1000; i++) {
-
-                    // Don't generate garbage runnables inside the loop.
-                    runOnUiThread(runnable);
-
-                    try {
-                        Thread.sleep(25);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
-
-        thread.start();
-    }
+//    private Thread thread;
+//
+//    private void feedMultiple() {
+//
+//        if (thread != null)
+//            thread.interrupt();
+//
+//        final Runnable runnable = new Runnable() {
+//
+//            @Override
+//            public void run() {
+//                addEntry();
+//            }
+//        };
+//
+//        thread = new Thread(new Runnable() {
+//
+//            @Override
+//            public void run() {
+//                runOnUiThread(runnable);
+//
+//                try {
+//                    Thread.sleep(25);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//                for (int i = 0; i < 1000; i++) {
+//
+//                    // Don't generate garbage runnables inside the loop.
+//
+//                }
+//            }
+//        });
+//
+//        thread.start();
+//    }
 
     @Override
     public void onResume() {
@@ -342,44 +356,59 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
     /*
      * This handler will be passed to UsbService. Data received from serial port is displayed through this handler
      */
-    public static class MyHandler extends Handler {
-        public final WeakReference<MainActivity> mActivity;
-
-        public float tekanan = 50f;
+    public class MyHandler extends Handler {
+        private final WeakReference<MainActivity> mActivity;
 
         public MyHandler(MainActivity activity) {
             mActivity = new WeakReference<>(activity);
-        }
-
-
-        public float getTekanan() {
-            return tekanan;
-        }
-
-        public void setTekanan(float tekanan) {
-            this.tekanan = tekanan;
         }
 
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case UsbService.MESSAGE_FROM_SERIAL_PORT:
-                    String data1 = (String) msg.obj;
-                    mActivity.get().display.setText(data1);
+//                    String data = (String) msg.obj;
+//                    mActivity.get().display.append(data);
                     break;
                 case UsbService.CTS_CHANGE:
-                    Toast.makeText(mActivity.get(), "CTS_CHANGE",Toast.LENGTH_LONG).show();
+                    Toast.makeText(mActivity.get(), "CTS_CHANGE", Toast.LENGTH_LONG).show();
                     break;
                 case UsbService.DSR_CHANGE:
-                    Toast.makeText(mActivity.get(), "DSR_CHANGE",Toast.LENGTH_LONG).show();
+                    Toast.makeText(mActivity.get(), "DSR_CHANGE", Toast.LENGTH_LONG).show();
                     break;
                 case UsbService.SYNC_READ:
                     String buffer = (String) msg.obj;
-                    mActivity.get().display.setText(buffer);
-                    setTekanan(Float.parseFloat(buffer));
+//                    mActivity.get().display.append(buffer);
+//                    onReceivedData();
+                    try {
+                        tvAppend(display, buffer);
+                    }   catch (Exception e) {
+                        e.printStackTrace();
+                    }
                     break;
             }
         }
 
     }
+
+    private void tvAppend(TextView tv, String text) {
+        final TextView ftv = tv;
+        final String ftext = text;
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ftv.append(ftext);
+                int tekanan = Integer.parseInt(ftext);
+//                String nilai = Integer.toString(tekanan);
+//                ftv.append(nilai);
+                try {
+                    addEntry(tekanan);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
 }

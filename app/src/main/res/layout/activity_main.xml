@@ -10,10 +10,10 @@
 
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/line_chart"
-        android:layout_width="200dp"
-        android:layout_height="215dp"
+        android:layout_width="606dp"
+        android:layout_height="242dp"
         app:layout_constraintBottom_toTopOf="@+id/editText1"
-        app:layout_constraintEnd_toStartOf="@+id/checkBox"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -25,9 +25,8 @@
         android:layout_height="159dp"
         android:gravity="bottom"
         android:scrollbarAlwaysDrawVerticalTrack="true"
-        android:text="Serial Print"
         app:layout_constraintBottom_toTopOf="@+id/checkBox2"
-        app:layout_constraintEnd_toEndOf="@+id/checkBox2"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@+id/line_chart"
         app:layout_constraintTop_toTopOf="parent"
@@ -86,6 +85,16 @@
         app:layout_constraintBottom_toBottomOf="@+id/buttonBaudrate"
         app:layout_constraintEnd_toStartOf="@+id/buttonBaudrate"
         app:layout_constraintTop_toTopOf="@+id/buttonBaudrate" />
+
+    <TextView
+        android:id="@+id/Data1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="NILAI"
+        app:layout_constraintBottom_toTopOf="@+id/buttonSend"
+        app:layout_constraintEnd_toStartOf="@+id/checkBox"
+        app:layout_constraintStart_toStartOf="@+id/buttonSend"
+        app:layout_constraintTop_toBottomOf="@+id/line_chart" />
 
     <!--    <TextView-->
     <!--        android:id="@+id/textbt"-->
