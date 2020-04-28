@@ -34,12 +34,17 @@ import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.ColorTemplate;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONStringer;
 
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 
@@ -48,11 +53,11 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
     boolean stopThread;
     private UsbService usbService;
     private TextView display;
-    private TextView dataDisplay;
     private EditText editText;
     private CheckBox box9600, box115200;
     private MyHandler mHandler;
-    private String inputStream;
+    public String message = "";
+    public String pesan = "";
 //    int tekanan;
     /*
      * Notifications from UsbService will be received here.
@@ -153,9 +158,9 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
         mHandler = new MyHandler(this);
 
         display = (TextView) findViewById(R.id.textView1);
-        dataDisplay = (TextView) findViewById(R.id.Data1);
         editText = (EditText) findViewById(R.id.editText1);
         Button sendButton = (Button) findViewById(R.id.buttonSend);
+
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -199,13 +204,9 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
                     usbService.changeBaudRate(9600);
             }
         });
-
-//        feedMultiple();
-
-
     }
 
-    private void addEntry(int value) {
+    private void addEntry(float value) {
 
         LineData data = mChart.getData();
 
@@ -219,7 +220,7 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
                 data.addDataSet(set);
             }
 
-              data.addEntry(new Entry(set.getEntryCount(), (int) (value)), 0);
+              data.addEntry(new Entry(set.getEntryCount(), (float) (value)), 0);
 //            data.addEntry(new Entry(set.getEntryCount(), (float) (Math.random() * 40) + 30f), 0);
 
 //            System.out.println(set.getEntryCount());
@@ -378,18 +379,27 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
                     break;
                 case UsbService.SYNC_READ:
                     String buffer = (String) msg.obj;
-//                    mActivity.get().display.append(buffer);
-//                    onReceivedData();
-                    try {
-                        tvAppend(display, buffer);
-                    }   catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    message = String.valueOf(buffer);
+                    tvAppend(display, message);
+//                    JSON(message);
                     break;
             }
         }
 
     }
+
+//    private void JSON(String pesan){z
+//        try {
+//            JSONObject obj = new JSONObject(pesan);
+//            String data = obj.getJSONObject("data").getString("tekanan1");
+//            float nilai = Float.parseFloat(data);
+//            addEntry((float) nilai);
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
+//
+//    }
+
 
     private void tvAppend(TextView tv, String text) {
         final TextView ftv = tv;
@@ -399,14 +409,9 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
             @Override
             public void run() {
                 ftv.append(ftext);
-                int tekanan = Integer.parseInt(ftext);
+//                int tekanan = Integer.parseInt(ftext);
 //                String nilai = Integer.toString(tekanan);
 //                ftv.append(nilai);
-                try {
-                    addEntry(tekanan);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
             }
         });
     }
