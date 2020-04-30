@@ -380,25 +380,33 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
                 case UsbService.SYNC_READ:
                     String buffer = (String) msg.obj;
                     message = String.valueOf(buffer);
-                    tvAppend(display, message);
-//                    JSON(message);
+                    JSON(message);
                     break;
             }
         }
 
     }
-
-//    private void JSON(String pesan){z
-//        try {
-//            JSONObject obj = new JSONObject(pesan);
-//            String data = obj.getJSONObject("data").getString("tekanan1");
-//            float nilai = Float.parseFloat(data);
-//            addEntry((float) nilai);
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
-//
-//    }
+    String pesanutuh="";
+    private void JSON(String pesan){
+        if(pesan.contains("{"))
+            pesanutuh=pesan;
+        else if (pesan.contains("}")) {
+            pesanutuh+=pesan;
+            pesanutuh=pesanutuh.replace("\\s","");
+            try {
+                JSONObject obj = new JSONObject(pesanutuh);
+                double nilai = obj.optDouble("tekanan1",0.0);
+                tvAppend(display, "\n---Tekanan 1---\n" + nilai);
+                addEntry((float)nilai);
+            } catch (JSONException e) {
+                e.printStackTrace();
+                tvAppend(display, "\n---Data Masuk (Gagal Baca JSON)---\n" + pesanutuh +"\n---Pesan---\n"+e.getMessage()+"\n---Errornya---\n"+e.toString());
+                ((EditText)MainActivity.this.findViewById(R.id.editText1)).setText("\n---Pesan---\n"+e.getMessage()+"\n---Errornya---\n"+e.toString());
+            }
+            pesanutuh="";
+        }else
+            pesanutuh+=pesan;
+    }
 
 
     private void tvAppend(TextView tv, String text) {
