@@ -12,6 +12,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.renderscript.ScriptGroup;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -386,12 +387,16 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
         }
 
     }
-    String pesanutuh="";
+//    String pesanutuh="";
+
     private void JSON(String pesan){
-        if(pesan.contains("{"))
-            pesanutuh=pesan;
-        else if (pesan.contains("}")) {
-            pesanutuh+=pesan;
+        if(pesan.contains("{")) {
+//            pesanutuh = pesan;
+            setPesanascii(false,pesan);
+        }else if (pesan.contains("}")) {
+//            pesanutuh+=pesan;
+            setPesanascii(true,pesan);
+            String pesanutuh=getPesanascii(pesanascii);
             pesanutuh=pesanutuh.replace("\\s","");
             try {
                 JSONObject obj = new JSONObject(pesanutuh);
@@ -401,13 +406,35 @@ public class MainActivity extends AppCompatActivity implements OnChartValueSelec
             } catch (JSONException e) {
                 e.printStackTrace();
                 tvAppend(display, "\n---Data Masuk (Gagal Baca JSON)---\n" + pesanutuh +"\n---Pesan---\n"+e.getMessage()+"\n---Errornya---\n"+e.toString());
-                ((EditText)MainActivity.this.findViewById(R.id.editText1)).setText("\n---Pesan---\n"+e.getMessage()+"\n---Errornya---\n"+e.toString());
             }
-            pesanutuh="";
-        }else
-            pesanutuh+=pesan;
+            pesanascii="";
+        }else {
+            setPesanascii(true,pesan);
+//            pesanutuh += pesan;
+        }
     }
 
+    String pesanascii="";
+    private void setPesanascii(boolean tambah,String pesan){
+        if(!tambah)
+            pesanascii="";
+
+        for(int i=0;i<pesan.length();i++)
+            pesanascii+=(int)pesan.charAt(i)+",";
+    }
+
+    private String getPesanascii(String asciinya){
+        asciinya+="0";
+        String[] satuan=asciinya.split(",");
+        String jadi="";
+        for (String satu : satuan) {
+            if(!satu.isEmpty()) {
+                if ((char) Integer.parseInt(satu.trim()) > 0)
+                    jadi += "" + (char) Integer.parseInt(satu.trim());
+            }
+        }
+        return jadi;
+    }
 
     private void tvAppend(TextView tv, String text) {
         final TextView ftv = tv;
